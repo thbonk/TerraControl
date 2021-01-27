@@ -27,7 +27,7 @@ var ctrl: TerraController? = nil
 let main = command(
   Option<String>(
     "configurationFile",
-    default: "/var/cache/terracontrol.state",
+    default: "/etc/terracontrol.config",
     description: "Path to the configuration file")) { (configurationFile: String) in
 
   let configUrl = URL(fileURLWithPath: configurationFile)
