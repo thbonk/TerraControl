@@ -145,11 +145,15 @@ public class TerraController: DeviceDelegate {
         switchEvents.append(scheduleMoonlightOff(program))
       }
 
-      switchEvents.append(scheduleLightOn(program))
-      switchEvents.append(scheduleLightOff(program))
+      if lightHours(for: program) > 0 {
+        switchEvents.append(scheduleLightOn(program))
+        switchEvents.append(scheduleLightOff(program))
+      }
 
-      switchEvents.append(scheduleHeatOn(program))
-      switchEvents.append(scheduleHeatOff(program))
+      if heatHours(for: program) > 0 {
+        switchEvents.append(scheduleHeatOn(program))
+        switchEvents.append(scheduleHeatOff(program))
+      }
     }
   }
 
