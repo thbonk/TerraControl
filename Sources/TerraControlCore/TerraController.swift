@@ -266,12 +266,12 @@ public class TerraController: DeviceDelegate {
     startOfProgram.day = program.start
     startOfProgram.time = try! Time(hour: 0)
 
-    return startOfProgram.localDate
+    return startOfProgram
   }
 
   private func daysSinceStart(of program: Program) -> Double {
     let programStart = start(of: program)
-    let today = Date().startOfDay.localDate
+    let today = Date().startOfDay
     let result = today.daysSince2000 - programStart.daysSince2000
 
     return result
@@ -302,7 +302,7 @@ public class TerraController: DeviceDelegate {
       try! sun.time(
                ofDate: Date().startOfDay.localDate,
         forSolarEvent: .noon,
-           atLocation: location).localDate
+           atLocation: location)
   }
 
   private func sunrise(for program: Program) -> Date {
@@ -310,7 +310,7 @@ public class TerraController: DeviceDelegate {
       try! sun.time(
                ofDate: Date().startOfDay.localDate,
         forSolarEvent: .sunrise,
-           atLocation: location).localDate
+           atLocation: location)
   }
 
   private func sunset(for program: Program) -> Date {
@@ -318,34 +318,34 @@ public class TerraController: DeviceDelegate {
       try! sun.time(
                ofDate: Date().startOfDay.localDate,
         forSolarEvent: .sunset,
-           atLocation: location).localDate
+           atLocation: location)
   }
 
   private func earliestLightTime(for program: Program) -> Date {
     var now = Date()
 
     now.time = program.earliestLightTime
-    return now.localDate
+    return now
   }
 
   private func earliestHeatTime(for program: Program) -> Date {
     var now = Date()
 
     now.time = program.earliestHeatTime
-    return now.localDate
+    return now
   }
 
   private func latestLightTime(for program: Program) -> Date {
     var now = Date()
 
     now.time = program.latestLightTime
-    return now.localDate
+    return now
   }
 
   private func latestHeatTime(for program: Program) -> Date {
     var now = Date()
 
     now.time = program.latestHeatTime
-    return now.localDate
+    return now
   }
 }
