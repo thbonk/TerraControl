@@ -1,5 +1,5 @@
 //
-//  LinuxMain.swift
+//  XCTestManifests.swift
 //  TerraControl
 //
 //  Created by Thomas Bonk on 24.01.21.
@@ -19,9 +19,12 @@
 //
 
 import XCTest
-import Quick
 
-QCKMain([
-  TerraControlConfigurationSpec.self,
-  TerraControlCoreSpec.self
-])
+#if !canImport(ObjectiveC)
+public func allTests() -> [XCTestCaseEntry] {
+  return [
+    TerraControlConfigurationSpec.allTests,
+    TerraControlCoreSpec.allTests
+  ]
+}
+#endif

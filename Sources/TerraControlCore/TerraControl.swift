@@ -1,5 +1,5 @@
 //
-//  LinuxMain.swift
+//  TerraControl.swift
 //  TerraControl
 //
 //  Created by Thomas Bonk on 24.01.21.
@@ -18,10 +18,6 @@
 //  limitations under the License.
 //
 
-import XCTest
-import Quick
+import Foundation
 
-QCKMain([
-  TerraControlConfigurationSpec.self,
-  TerraControlCoreSpec.self
-])
+

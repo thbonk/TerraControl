@@ -1,5 +1,5 @@
 //
-//  LinuxMain.swift
+//  TerraControlCoreSpec.swift
 //  TerraControl
 //
 //  Created by Thomas Bonk on 24.01.21.
@@ -18,10 +18,22 @@
 //  limitations under the License.
 //
 
-import XCTest
-import Quick
+struct TerraControl {
+  var text = "Hello, World!"
+}
 
-QCKMain([
-  TerraControlConfigurationSpec.self,
-  TerraControlCoreSpec.self
-])
+
+import Foundation
+import Quick
+import Nimble
+
+@testable import TerraControlCore
+
+final class TerraControlCoreSpec: QuickSpec {
+
+  public override func spec() {
+    describe("test") {
+    }
+  }
+}
+
