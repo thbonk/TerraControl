@@ -48,9 +48,9 @@ public class TerraController: DeviceDelegate {
   private var lightSwitch: Accessory.Switch
   private var heatlightSwitch: Accessory.Switch
   private var moonlightSwitch: Accessory.Switch
+  private var alarm: Accessory.SecuritySystem
   private var server: Server
-  private var location: SunCalc.Location
-  private var sun = SunCalc()
+  private var location: Solar.Location
   private var eventScheduler: Scheduler!
   private var switchEvents = [Scheduler]()
 
@@ -60,8 +60,17 @@ public class TerraController: DeviceDelegate {
   public init(configuration: TerraControlConfiguration) throws {
     self.configuration = configuration
 
-    location = SunCalc.Location(latitude: configuration.location.latitude, longitude: configuration.location.longitude)
+    location = Solar.Location(latitude: configuration.location.latitude, longitude: configuration.location.longitude)
 
+    alarm =
+      Accessory.SecuritySystem(
+        info:
+          Service.Info(
+            name: "Error in \(configuration.bridgeName!)",
+            serialNumber: "1ea75203-1f70-408c-9778-0e6ec4e7cf41",
+            manufacturer: "thbonk",
+            model: "TerraController",
+            firmwareRevision: revision))
     lightSwitch =
       Accessory.Switch(
         info:
@@ -141,50 +150,53 @@ public class TerraController: DeviceDelegate {
 
     if let program = configuration.currentProgram {
       if program.moonlightEnabled {
-        switchEvents.append(scheduleMoonlightOn(program))
-        switchEvents.append(scheduleMoonlightOff(program))
+        handleError { switchEvents.append(try scheduleMoonlightOn(program)) }
+        handleError { switchEvents.append(try scheduleMoonlightOff(program)) }
       }
 
       if lightHours(for: program) > 0 {
-        switchEvents.append(scheduleLightOn(program))
-        switchEvents.append(scheduleLightOff(program))
+        handleError { switchEvents.append(try scheduleLightOn(program)) }
+        handleError { switchEvents.append(try scheduleLightOff(program)) }
       }
 
       if heatHours(for: program) > 0 {
-        switchEvents.append(scheduleHeatOn(program))
-        switchEvents.append(scheduleHeatOff(program))
+        handleError { switchEvents.append(try scheduleHeatOn(program)) }
+        handleError { switchEvents.append(try scheduleHeatOff(program)) }
       }
     }
   }
 
-  private func scheduleMoonlightOn(_ program: Program) -> Scheduler {
-    return
-      Scheduler
-        .schedule(
-          at: try! sun.moonTimes(date: Date(), location: location).moonRiseTime) {
+  private func handleError(_ closure: () throws -> ()) {
+    do {
+      try closure()
+    } catch {
+      TerraControlLogger.error("An error occurred: \(error)")
 
-          self.moonlightSwitch.`switch`.powerState.value = true
-        }
+      alarm.securitySystem.securitySystemCurrentState.value = .alarmTriggered
+    }
   }
 
-  private func scheduleMoonlightOff(_ program: Program) -> Scheduler {
-    return
-      Scheduler
-        .schedule(
-          at: try! sun.moonTimes(date: Date(), location: location).moonSetTime) {
+  private func scheduleMoonlightOn(_ program: Program) throws -> Scheduler {
 
-          self.moonlightSwitch.`switch`.powerState.value = false
-        }
+    return Scheduler.schedule(at: try moonRise(for: program)) {
+      self.moonlightSwitch.`switch`.powerState.value = true
+    }
   }
 
-  private func scheduleLightOn(_ program: Program) -> Scheduler {
+  private func scheduleMoonlightOff(_ program: Program) throws -> Scheduler {
+    return Scheduler.schedule(at: try moonSet(for: program)) {
+      self.moonlightSwitch.`switch`.powerState.value = false
+    }
+  }
+
+  private func scheduleLightOn(_ program: Program) throws -> Scheduler {
     let halfLightHours = lightHours(for: program) / 2
     let earliestLightOnTime =
-      sunrise(for: program) < earliestLightTime(for: program)
+      try sunrise(for: program) < earliestLightTime(for: program)
       ? earliestLightTime(for: program)
-      : sunrise(for: program)
+      : try sunrise(for: program)
     var lightOnTime =
-      Date(timeIntervalSince1970: noon(for: program).timeIntervalSince1970 - (halfLightHours * 60 * 60))
+      Date(timeIntervalSince1970: try noon(for: program).timeIntervalSince1970 - (halfLightHours * 60 * 60))
 
     lightOnTime = lightOnTime < earliestLightOnTime ? earliestLightOnTime : lightOnTime
 
@@ -198,14 +210,14 @@ public class TerraController: DeviceDelegate {
       }
   }
 
-  private func scheduleHeatOn(_ program: Program) -> Scheduler {
+  private func scheduleHeatOn(_ program: Program) throws -> Scheduler {
     let halfHeatHours = heatHours(for: program) / 2
     let earliestHeatOnTime =
-      sunrise(for: program) < earliestHeatTime(for: program)
+      try sunrise(for: program) < earliestHeatTime(for: program)
       ? earliestHeatTime(for: program)
-      : sunrise(for: program)
+      : try sunrise(for: program)
     var heatOnTime =
-      Date(timeIntervalSince1970: noon(for: program).timeIntervalSince1970 - (halfHeatHours * 60 * 60))
+      Date(timeIntervalSince1970: try noon(for: program).timeIntervalSince1970 - (halfHeatHours * 60 * 60))
 
     heatOnTime = heatOnTime < earliestHeatOnTime ? earliestHeatOnTime : heatOnTime
 
@@ -219,14 +231,14 @@ public class TerraController: DeviceDelegate {
       }
   }
 
-  private func scheduleLightOff(_ program: Program) -> Scheduler {
+  private func scheduleLightOff(_ program: Program) throws -> Scheduler {
     let halfLightHours = lightHours(for: program) / 2
     let latestLightOffTime =
-      sunset(for: program) > latestLightTime(for: program)
+      try sunset(for: program) > latestLightTime(for: program)
       ? latestLightTime(for: program)
-      : sunset(for: program)
+      : try sunset(for: program)
     var lightOffTime =
-      Date(timeIntervalSince1970: noon(for: program).timeIntervalSince1970 + (halfLightHours * 60 * 60))
+      Date(timeIntervalSince1970: try noon(for: program).timeIntervalSince1970 + (halfLightHours * 60 * 60))
 
     lightOffTime = lightOffTime > latestLightOffTime ? latestLightOffTime : lightOffTime
 
@@ -240,14 +252,14 @@ public class TerraController: DeviceDelegate {
       }
   }
 
-  private func scheduleHeatOff(_ program: Program) -> Scheduler {
+  private func scheduleHeatOff(_ program: Program) throws -> Scheduler {
     let halfHeatHours = heatHours(for: program) / 2
     let latestHeatOffTime =
-      sunrise(for: program) < latestHeatTime(for: program)
+      try sunrise(for: program) < latestHeatTime(for: program)
       ? latestHeatTime(for: program)
-      : sunrise(for: program)
+      : try sunrise(for: program)
     var heatOffTime =
-      Date(timeIntervalSince1970: noon(for: program).timeIntervalSince1970 + (halfHeatHours * 60 * 60))
+      Date(timeIntervalSince1970: try noon(for: program).timeIntervalSince1970 + (halfHeatHours * 60 * 60))
 
     heatOffTime = heatOffTime > latestHeatOffTime ? latestHeatOffTime : heatOffTime
 
@@ -276,7 +288,7 @@ public class TerraController: DeviceDelegate {
   private func daysSinceStart(of program: Program) -> Double {
     let programStart = start(of: program)
     let today = Date().startOfDay
-    let result = today.daysSince2000 - programStart.daysSince2000
+    let result = (today.timeIntervalSince1970 - programStart.timeIntervalSince1970) / (24 * 60 * 60)
 
     return result
   }
@@ -301,28 +313,30 @@ public class TerraController: DeviceDelegate {
     return hours
   }
 
-  private func noon(for program: Program) -> Date {
-    return
-      try! sun.time(
-               ofDate: Date().startOfDay.localDate,
-        forSolarEvent: .noon,
-           atLocation: location)
+  private func noon(for program: Program) throws -> Date {
+    return try Solar.noon(for: Date(), at: location, in: configuration.timezone)
   }
 
-  private func sunrise(for program: Program) -> Date {
-    return
-      try! sun.time(
-               ofDate: Date().startOfDay.localDate,
-        forSolarEvent: .sunrise,
-           atLocation: location)
+  private func moonRise(for program: Program) throws -> Date {
+    // TODO Calculate moon rise
+    var rise = Date()
+
+    rise.time = try Time(hour: 22)
+
+    return rise
   }
 
-  private func sunset(for program: Program) -> Date {
-    return
-      try! sun.time(
-               ofDate: Date().startOfDay.localDate,
-        forSolarEvent: .sunset,
-           atLocation: location)
+  private func moonSet(for program: Program) throws -> Date {
+    // TODO Calculate moon set
+    return try moonRise(for: program).addingTimeInterval(120)
+  }
+
+  private func sunrise(for program: Program) throws -> Date {
+    return try Solar.sunRiseAndSet(for: Date(), at: location, in: configuration.timezone).sunrise
+  }
+
+  private func sunset(for program: Program) throws -> Date {
+    return try Solar.sunRiseAndSet(for: Date(), at: location, in: configuration.timezone).sunset
   }
 
   private func earliestLightTime(for program: Program) -> Date {
