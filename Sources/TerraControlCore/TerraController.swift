@@ -48,7 +48,7 @@ public class TerraController: DeviceDelegate {
   private var lightSwitch: Accessory.Switch
   private var heatlightSwitch: Accessory.Switch
   private var moonlightSwitch: Accessory.Switch
-  private var alarm: Accessory.SecuritySystem
+  private var alarm: Accessory.SmokeSensor
   private var server: Server
   private var location: Solar.Location
   private var eventScheduler: Scheduler!
@@ -63,10 +63,10 @@ public class TerraController: DeviceDelegate {
     location = Solar.Location(latitude: configuration.location.latitude, longitude: configuration.location.longitude)
 
     alarm =
-      Accessory.SecuritySystem(
+      Accessory.SmokeSensor(
         info:
           Service.Info(
-            name: "Error in \(configuration.bridgeName!)",
+            name: "Error in \(configuration.bridgeName)",
             serialNumber: "1ea75203-1f70-408c-9778-0e6ec4e7cf41",
             manufacturer: "thbonk",
             model: "TerraController",
@@ -75,7 +75,7 @@ public class TerraController: DeviceDelegate {
       Accessory.Switch(
         info:
           Service.Info(
-                    name: configuration.lightSwitchName!,
+                    name: configuration.lightSwitchName,
             serialNumber: "d82d38c4-591f-429e-b346-5bee78ac7094",
             manufacturer: "thbonk",
                    model: "TerraController",
@@ -84,7 +84,7 @@ public class TerraController: DeviceDelegate {
       Accessory.Switch(
         info:
           Service.Info(
-            name: configuration.heatlightSwitchName!,
+            name: configuration.heatlightSwitchName,
             serialNumber: "027b6a61-ddf2-4d79-a90e-bf2c1fc15558",
             manufacturer: "thbonk",
             model: "TerraController",
@@ -93,7 +93,7 @@ public class TerraController: DeviceDelegate {
       Accessory.Switch(
         info:
           Service.Info(
-            name: configuration.moonlightSwitchName!,
+            name: configuration.moonlightSwitchName,
             serialNumber: "640a7399-4855-43d2-9932-7d21e0cf32a6",
             manufacturer: "thbonk",
             model: "TerraController",
@@ -103,13 +103,13 @@ public class TerraController: DeviceDelegate {
       Device(
         bridgeInfo:
           Service.Info(
-                        name: configuration.bridgeName!,
+                        name: configuration.bridgeName,
                 serialNumber: "4dbdb2ea-fea0-4e42-bc98-4a5de21c74fd",
                 manufacturer: "thbonk",
                        model: "TerraController Brdige",
             firmwareRevision: revision),
           setupCode: Device.SetupCode(stringLiteral: configuration.setupCode),
-        storage: FileStorage(filename: configuration.stateFile!),
+        storage: FileStorage(filename: configuration.stateFile),
         accessories: [lightSwitch, heatlightSwitch, moonlightSwitch])
     server = try Server(device: bridge)
     bridge.delegate = self
@@ -172,7 +172,7 @@ public class TerraController: DeviceDelegate {
     } catch {
       TerraControlLogger.error("An error occurred: \(error)")
 
-      alarm.securitySystem.securitySystemCurrentState.value = .alarmTriggered
+      alarm.smokeSensor.smokeDetected.value = .smokedetected
     }
   }
 

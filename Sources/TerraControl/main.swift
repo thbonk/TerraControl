@@ -30,18 +30,22 @@ let main = command(
     default: "/etc/terracontrol.config",
     description: "Path to the configuration file")) { (configurationFile: String) in
 
-  let configUrl = URL(fileURLWithPath: configurationFile)
-  let data = try Data(contentsOf: configUrl)
-  let decoder = JSONDecoder()
-  let config = try decoder.decode(TerraControlConfiguration.self, from: data)
+  do {
+    let configUrl = URL(fileURLWithPath: configurationFile)
+    let data = try Data(contentsOf: configUrl)
+    let decoder = JSONDecoder()
+    let config = try decoder.decode(TerraControlConfiguration.self, from: data)
 
-  let controller = try! TerraController(configuration: config)
-  ctrl = controller
+    let controller = try TerraController(configuration: config)
+    ctrl = controller
 
-  signal(SIGINT) { _ in ctrl!.stop() }
-  signal(SIGTERM) { _ in ctrl!.stop() }
+    signal(SIGINT) { _ in ctrl!.stop() }
+    signal(SIGTERM) { _ in ctrl!.stop() }
 
-  try! controller.start()
+    try controller.start()
+  } catch {
+    TerraControlLogger.error("Error while starting: \(error)")
+  }
 }
 
 main.run()

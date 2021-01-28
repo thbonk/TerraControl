@@ -146,11 +146,11 @@ public struct TerraControlConfiguration: Hashable, Codable {
   public var timezone: TimeZone
   public var location: GeoLocation
   public var setupCode: String
-  public var bridgeName: String? = "TerraController"
-  public var lightSwitchName: String? = "Terrarium Light"
-  public var heatlightSwitchName: String? = "Terrarium Heat Light"
-  public var moonlightSwitchName: String? = "Terrarium Moon Light"
-  public var stateFile: String? = "/var/cache/TerraControlPairings.json"
+  public var bridgeName: String = "TerraController"
+  public var lightSwitchName: String = "Terrarium Light"
+  public var heatlightSwitchName: String = "Terrarium Heat Light"
+  public var moonlightSwitchName: String = "Terrarium Moon Light"
+  public var stateFile: String = "/var/cache/TerraControlPairings.json"
   public var programs: [Program]
 
   public var sortedPrograms: [Program] {
@@ -195,7 +195,7 @@ public struct TerraControlConfiguration: Hashable, Codable {
     if values.contains(.heatlightSwitchName) {
       heatlightSwitchName = try values.decode(String.self, forKey: .heatlightSwitchName)
     }
-    if values.contains(.bridgeName) {
+    if values.contains(.moonlightSwitchName) {
       moonlightSwitchName = try values.decode(String.self, forKey: .moonlightSwitchName)
     }
     if values.contains(.stateFile) {
