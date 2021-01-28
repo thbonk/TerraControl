@@ -144,25 +144,30 @@ public class TerraController: DeviceDelegate {
   // MARK: - Schedule Events
 
   private func scheduleEvents() {
-    TerraControlLogger.info("Scheduling events")
+    TerraControlLogger.info("Scheduling events...")
 
     switchEvents.removeAll()
 
-    if let program = configuration.currentProgram {
-      if program.moonlightEnabled {
-        handleError { switchEvents.append(try scheduleMoonlightOn(program)) }
-        handleError { switchEvents.append(try scheduleMoonlightOff(program)) }
-      }
+    guard let program = configuration.currentProgram else {
+      TerraControlLogger.info("No active program found!")
+      return
+    }
 
-      if lightHours(for: program) > 0 {
-        handleError { switchEvents.append(try scheduleLightOn(program)) }
-        handleError { switchEvents.append(try scheduleLightOff(program)) }
-      }
+    TerraControlLogger.info("Active program: \(program.name)")
 
-      if heatHours(for: program) > 0 {
-        handleError { switchEvents.append(try scheduleHeatOn(program)) }
-        handleError { switchEvents.append(try scheduleHeatOff(program)) }
-      }
+    if program.moonlightEnabled {
+      handleError { switchEvents.append(try scheduleMoonlightOn(program)) }
+      handleError { switchEvents.append(try scheduleMoonlightOff(program)) }
+    }
+
+    if lightHours(for: program) > 0 {
+      handleError { switchEvents.append(try scheduleLightOn(program)) }
+      handleError { switchEvents.append(try scheduleLightOff(program)) }
+    }
+
+    if heatHours(for: program) > 0 {
+      handleError { switchEvents.append(try scheduleHeatOn(program)) }
+      handleError { switchEvents.append(try scheduleHeatOff(program)) }
     }
   }
 

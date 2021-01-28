@@ -107,6 +107,7 @@ public struct Program: Hashable, Codable {
         second: 0,
         nanosecond: 0)
       .date!
+      .localDate
   }
 
 
@@ -161,7 +162,7 @@ public struct TerraControlConfiguration: Hashable, Codable {
   }
 
   public var currentProgram: Program? {
-    let now = Date()
+    let now = Date().localDate
     var current: Program? = nil
 
     sortedPrograms
