@@ -265,7 +265,7 @@ public class SunCalc {
     }
 
     if let riseHour = riseHour, let setHour = setHour {
-      return (moonRiseTime: date.hoursLater(riseHour), moonSetTime: date.hoursLater(setHour))
+      return (moonRiseTime: date.hoursLater(setHour), moonSetTime: date.hoursLater(riseHour))
     }
     else {
       if ye > 0 {
