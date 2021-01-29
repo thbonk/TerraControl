@@ -21,8 +21,11 @@
 import Foundation
 import Commander
 import TerraControlCore
+import Pushover
 
 var ctrl: TerraController? = nil
+var pushover: Pushover? = nil
+var pushoverUserKey: String = ""
 
 let main = command(
   Option<String>(
@@ -36,7 +39,12 @@ let main = command(
     let decoder = JSONDecoder()
     let config = try decoder.decode(TerraControlConfiguration.self, from: data)
 
-    let controller = try TerraController(configuration: config)
+    if let pushoverToken = config.pushoverToken {
+      pushover = Pushover(token: pushoverToken)
+      pushoverUserKey = config.pushoverUserKey!
+    }
+
+    let controller = try TerraController(configuration: config, pushover: pushover)
     ctrl = controller
 
     signal(SIGINT) { _ in ctrl!.stop() }
@@ -45,6 +53,19 @@ let main = command(
     try controller.start()
   } catch {
     TerraControlLogger.error("Error while starting: \(error)")
+
+    if let push = pushover {
+      push
+        .sendNotification(
+          "A TerraControl error occurred: \(error)",
+          to: [pushoverUserKey],
+          title: "Error",
+          priority: .emergency,
+          sound: .spacealarm) { result in
+
+          TerraControlLogger.error("Result when sending notification: \(result)")
+        }
+    }
   }
 }
 

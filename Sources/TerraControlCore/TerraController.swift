@@ -21,6 +21,7 @@
 import Foundation
 import Logging
 import HAP
+import Pushover
 
 public private(set) var TerraControlLogger: Logger = {
   let logger = Logger(label: "TerraController")
@@ -40,6 +41,7 @@ public class TerraController: DeviceDelegate {
   // MARK: - Private Properties
 
   private let revision = Revision("1")
+  private var pushover: Pushover? = nil
 
   private var configuration: TerraControlConfiguration
   private var keepRunning: Bool = true
@@ -48,7 +50,6 @@ public class TerraController: DeviceDelegate {
   private var lightSwitch: Accessory.Switch
   private var heatlightSwitch: Accessory.Switch
   private var moonlightSwitch: Accessory.Switch
-  private var alarm: Accessory.SmokeSensor
   private var server: Server
   private var location: Solar.Location
   private var eventScheduler: Scheduler!
@@ -57,20 +58,12 @@ public class TerraController: DeviceDelegate {
 
   // MARK: - Initialization
 
-  public init(configuration: TerraControlConfiguration) throws {
+  public init(configuration: TerraControlConfiguration, pushover: Pushover?) throws {
     self.configuration = configuration
+    self.pushover = pushover
 
     location = Solar.Location(latitude: configuration.location.latitude, longitude: configuration.location.longitude)
 
-    alarm =
-      Accessory.SmokeSensor(
-        info:
-          Service.Info(
-            name: "Error in \(configuration.bridgeName)",
-            serialNumber: "1ea75203-1f70-408c-9778-0e6ec4e7cf41",
-            manufacturer: "thbonk",
-            model: "TerraController",
-            firmwareRevision: revision))
     lightSwitch =
       Accessory.Switch(
         info:
@@ -143,6 +136,23 @@ public class TerraController: DeviceDelegate {
 
   // MARK: - Schedule Events
 
+  private func logAndNotify(_ message: String) {
+    TerraControlLogger.info("LightOn triggered at >\(Date().localDate)<")
+
+    if let pushover = self.pushover {
+      pushover
+        .sendNotification(
+          message,
+          to: [configuration.pushoverUserKey!],
+          title: "TerraControl Information",
+          priority: .normal,
+          sound: .classical) { result in
+
+          TerraControlLogger.error("Result when sending notification: \(result)")
+        }
+    }
+  }
+
   private func scheduleEvents() {
     TerraControlLogger.info("Scheduling events...")
 
@@ -177,7 +187,18 @@ public class TerraController: DeviceDelegate {
     } catch {
       TerraControlLogger.error("An error occurred: \(error)")
 
-      alarm.smokeSensor.smokeDetected.value = .smokedetected
+      if let pushover = self.pushover {
+        pushover
+          .sendNotification(
+            "A TerraControl error occurred: \(error)",
+            to: [configuration.pushoverUserKey!],
+            title: "TerraControl Error",
+            priority: .emergency,
+            sound: .spacealarm) { result in
+
+            TerraControlLogger.error("Result when sending notification: \(result)")
+        }
+      }
     }
   }
 
@@ -185,12 +206,16 @@ public class TerraController: DeviceDelegate {
 
     return Scheduler.schedule(at: try moonRise(for: program)) {
       self.moonlightSwitch.`switch`.powerState.value = true
+
+      self.logAndNotify("MoonlightOn triggered at >\(Date().localDate)<")
     }
   }
 
   private func scheduleMoonlightOff(_ program: Program) throws -> Scheduler {
     return Scheduler.schedule(at: try moonSet(for: program)) {
       self.moonlightSwitch.`switch`.powerState.value = false
+
+      self.logAndNotify("MoonlightOff triggered at >\(Date().localDate)<")
     }
   }
 
@@ -211,7 +236,7 @@ public class TerraController: DeviceDelegate {
       Scheduler.schedule(at: lightOnTime) {
         self.lightSwitch.`switch`.powerState.value = true
 
-        TerraControlLogger.info("LightOn triggered at >\(Date().localDate)<")
+        self.logAndNotify("LightOn triggered at >\(Date().localDate)<")
       }
   }
 
@@ -232,7 +257,7 @@ public class TerraController: DeviceDelegate {
       Scheduler.schedule(at: heatOnTime) {
         self.heatlightSwitch.`switch`.powerState.value = true
 
-        TerraControlLogger.info("HeatOn triggered at >\(Date().localDate)<")
+        self.logAndNotify("HeatOn triggered at >\(Date().localDate)<")
       }
   }
 
@@ -253,7 +278,7 @@ public class TerraController: DeviceDelegate {
       Scheduler.schedule(at: lightOffTime) {
         self.lightSwitch.`switch`.powerState.value = false
 
-        TerraControlLogger.info("LightOff triggered at >\(Date().localDate)<")
+        self.logAndNotify("LightOff triggered at >\(Date().localDate)<")
       }
   }
 
@@ -274,7 +299,7 @@ public class TerraController: DeviceDelegate {
       Scheduler.schedule(at: heatOffTime) {
         self.heatlightSwitch.`switch`.powerState.value = false
 
-        TerraControlLogger.info("HeatOff triggered at >\(Date().localDate)<")
+        self.logAndNotify("HeatOff triggered at >\(Date().localDate)<")
       }
   }
 

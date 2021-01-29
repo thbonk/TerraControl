@@ -19,6 +19,7 @@ let package = Package(
     .package(url: "https://github.com/Bouke/HAP", .branch("master")),
     .package(url: "https://github.com/apple/swift-log.git", Version("0.0.0") ..< Version("2.0.0")),
     .package(url: "https://github.com/kylef/Commander", Version("0.9.1") ..< Version("1.0.0")),
+    .package(url: "https://github.com/kiliankoe/Pushover", .branch("master")),
     .package(url: "https://github.com/Quick/Quick", from: "3.0.0"),
     .package(url: "https://github.com/Quick/Nimble", from: "9.0.0"),
   ],
@@ -27,10 +28,16 @@ let package = Package(
     // Targets can depend on other targets in this package, and on products in packages this package depends on.
     .target(
       name: "TerraControl",
-      dependencies: ["TerraControlCore", "Commander"]),
+      dependencies: [
+        "TerraControlCore",
+        "Commander",
+        "Pushover"]),
     .target(
       name: "TerraControlCore",
-      dependencies: ["HAP", .product(name: "Logging", package: "swift-log")]),
+      dependencies: [
+        "HAP",
+        "Pushover",
+        .product(name: "Logging", package: "swift-log")]),
     .testTarget(
       name: "TerraControlCoreTests",
       dependencies: ["TerraControlCore", "Quick", "Nimble"],

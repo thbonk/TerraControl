@@ -74,6 +74,15 @@
         }
       },
       {
+        "package": "Pushover",
+        "repositoryURL": "https://github.com/kiliankoe/Pushover",
+        "state": {
+          "branch": "master",
+          "revision": "15b38ed8d159081ddff50d0d6abdf656727832c0",
+          "version": null
+        }
+      },
+      {
         "package": "Quick",
         "repositoryURL": "https://github.com/Quick/Quick",
         "state": {

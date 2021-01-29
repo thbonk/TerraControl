@@ -151,6 +151,8 @@ public struct TerraControlConfiguration: Hashable, Codable {
   public var lightSwitchName: String = "Terrarium Light"
   public var heatlightSwitchName: String = "Terrarium Heat Light"
   public var moonlightSwitchName: String = "Terrarium Moon Light"
+  public var pushoverToken: String? = nil
+  public var pushoverUserKey: String? = nil
   public var stateFile: String = "/var/cache/TerraControlPairings.json"
   public var programs: [Program]
 
@@ -199,11 +201,24 @@ public struct TerraControlConfiguration: Hashable, Codable {
     if values.contains(.moonlightSwitchName) {
       moonlightSwitchName = try values.decode(String.self, forKey: .moonlightSwitchName)
     }
+
+    if values.contains(.pushoverToken) {
+      pushoverToken = try values.decode(String.self, forKey: .pushoverToken)
+    }
+    if values.contains(.pushoverUserKey) {
+      pushoverUserKey = try values.decode(String.self, forKey: .pushoverUserKey)
+    }
+
     if values.contains(.stateFile) {
       stateFile = try values.decode(String.self, forKey: .stateFile)
     }
 
     programs = try values.decode([Program].self, forKey: .programs)
+
+    if pushoverToken == nil || pushoverUserKey == nil {
+      pushoverToken = nil
+      pushoverUserKey = nil
+    }
   }
 
 
@@ -229,6 +244,8 @@ public struct TerraControlConfiguration: Hashable, Codable {
     case lightSwitchName
     case heatlightSwitchName
     case moonlightSwitchName
+    case pushoverToken
+    case pushoverUserKey
     case stateFile
     case programs
   }
