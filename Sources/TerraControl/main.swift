@@ -22,7 +22,10 @@ import Foundation
 import Commander
 import TerraControlCore
 import Pushover
-import Procbridge
+import Swifter
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 var ctrl: TerraController? = nil
 var pushover: Pushover? = nil
@@ -30,17 +33,15 @@ var pushoverUserKey: String = ""
 
 let port:UInt16 = 0xCAFE
 
-let ipcServer: PBServer = {
-  return PBServer(port : port) { (method, args) in
-    switch method {
-    case "stop":
-      ctrl?.stop()
-      return 0
+let ipcServer: HttpServer = {
+  let server = HttpServer()
 
-    default:
-      return 0
-    }
+  server["/stop"] = { request in
+    ctrl?.stop()
+    return .ok(.htmlBody("OK"))
   }
+
+  return server
 }()
 
 let main = command(
@@ -55,7 +56,12 @@ let main = command(
 
   do {
     guard !stop else {
-      try PBClient(host: "127.0.0.1", port: port).request(method: "stop", payload: 0)
+      let url = URL(string: "http://127.0.0.1:\(port)/stop")!
+      var request = URLRequest(url: url)
+      request.httpMethod = "GET"
+
+      let data = try NSURLConnection.sendSynchronousRequest(request, returning: nil)
+      print("\(data)")
       return
     }
 
@@ -75,7 +81,7 @@ let main = command(
     signal(SIGINT) { _ in ctrl!.stop() }
     signal(SIGTERM) { _ in ctrl!.stop() }
 
-    ipcServer.start()
+    try ipcServer.start(port, forceIPv4: true)
     try controller.start()
   } catch {
     TerraControlLogger.error("Error while starting: \(error)")
