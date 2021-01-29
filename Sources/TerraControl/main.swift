@@ -22,18 +22,43 @@ import Foundation
 import Commander
 import TerraControlCore
 import Pushover
+import Procbridge
 
 var ctrl: TerraController? = nil
 var pushover: Pushover? = nil
 var pushoverUserKey: String = ""
 
+let port:UInt16 = 0xCAFE
+
+let ipcServer: PBServer = {
+  return PBServer(port : port) { (method, args) in
+    switch method {
+    case "stop":
+      ctrl?.stop()
+      return 0
+
+    default:
+      return 0
+    }
+  }
+}()
+
 let main = command(
   Option<String>(
     "configurationFile",
     default: "/etc/terracontrol.config",
-    description: "Path to the configuration file")) { (configurationFile: String) in
+    description: "Path to the configuration file"),
+  Flag(
+    "stop",
+    default: false,
+    description: "Stop a running TerraController instance")) { (configurationFile: String, stop: Bool) in
 
   do {
+    guard !stop else {
+      try PBClient(host: "127.0.0.1", port: port).request(method: "stop", payload: 0)
+      return
+    }
+
     let configUrl = URL(fileURLWithPath: configurationFile)
     let data = try Data(contentsOf: configUrl)
     let decoder = JSONDecoder()
@@ -50,6 +75,7 @@ let main = command(
     signal(SIGINT) { _ in ctrl!.stop() }
     signal(SIGTERM) { _ in ctrl!.stop() }
 
+    ipcServer.start()
     try controller.start()
   } catch {
     TerraControlLogger.error("Error while starting: \(error)")
