@@ -75,10 +75,10 @@
       },
       {
         "package": "Pushover",
-        "repositoryURL": "https://github.com/kiliankoe/Pushover",
+        "repositoryURL": "https://github.com/thbonk/Pushover",
         "state": {
           "branch": "master",
-          "revision": "15b38ed8d159081ddff50d0d6abdf656727832c0",
+          "revision": "84c6a78f9e9d7e5758c6cefcdc9e601756a57c31",
           "version": null
         }
       },
