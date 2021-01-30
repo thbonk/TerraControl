@@ -76,6 +76,10 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
+            argument = "--stop"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "--configurationFile"
             isEnabled = "YES">
          </CommandLineArgument>
