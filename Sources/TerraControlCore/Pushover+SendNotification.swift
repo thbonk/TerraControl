@@ -37,23 +37,23 @@ public extension Pushover {
     let notification = Notification(message: message, to: recipients)
 
     if let _ = title {
-      notification.title(title!)
+      _ = notification.title(title!)
     }
 
     if let _ = url {
-      notification.url(url!)
+      _ = notification.url(url!)
     }
 
     if let _ = urlTitle {
-      notification.urlTitle(urlTitle!)
+      _ = notification.urlTitle(urlTitle!)
     }
 
-    notification.timestamp(timestamp)
-    notification.priority(priority)
-    notification.sound(sound)
+    _ = notification.timestamp(timestamp)
+    _ = notification.priority(priority)
+    _ = notification.sound(sound)
 
     if let _ = devices {
-      notification.devices(devices!)
+      _ = notification.devices(devices!)
     }
 
 
