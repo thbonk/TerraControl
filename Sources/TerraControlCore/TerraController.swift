@@ -150,7 +150,7 @@ public class TerraController: DeviceDelegate {
   // MARK: - Schedule Events
 
   private func logAndNotify(_ message: String) {
-    TerraControlLogger.info("LightOn triggered at >\(Date().localDate)<")
+    TerraControlLogger.info("\(message)")
 
     if let pushover = self.pushover {
       pushover
@@ -172,11 +172,12 @@ public class TerraController: DeviceDelegate {
     switchEvents.removeAll()
 
     guard let program = configuration.currentProgram else {
-      TerraControlLogger.info("No active program found!")
+      logAndNotify("No active program found! Configured programs: \(programsSummary())")
+
       return
     }
 
-    TerraControlLogger.info("Active program: \(program.name)")
+    logAndNotify("Scheduling events for program >\(program.name)<")
 
     if program.moonlightEnabled {
       handleError { switchEvents.append(try scheduleMoonlightOn(program)) }
@@ -192,6 +193,16 @@ public class TerraController: DeviceDelegate {
       handleError { switchEvents.append(try scheduleHeatOn(program)) }
       handleError { switchEvents.append(try scheduleHeatOff(program)) }
     }
+  }
+
+  private func programsSummary() -> String {
+    let result =
+      configuration
+      .programs
+      .map { program in "'\(program.name)' -> \(program.start.day)/\(program.start.month)" }
+      .joined(separator: " | ")
+
+    return "(\(result))"
   }
 
   private func handleError(_ closure: () throws -> ()) {
