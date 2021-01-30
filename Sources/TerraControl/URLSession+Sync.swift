@@ -38,7 +38,7 @@ extension URLSession {
 
     _ = semaphore.wait(timeout: DispatchTime.distantFuture)
 
-    TerraControlLogger.info("data = \(data) | response = \(response) | error = \(error)")
+    TerraControlLogger.info("data = \(String(describing: data)) | response = \(String(describing: response)) | error = \(String(describing: error))")
 
     return (data, response, error)
   }

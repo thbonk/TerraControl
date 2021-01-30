@@ -124,7 +124,7 @@ public class TerraController: DeviceDelegate {
           "Starting TerraController",
           to: [configuration.pushoverUserKey!],
           title: "TerraControl Information",
-          priority: .emergency,
+          priority: .normal,
           sound: .spacealarm) { result in
 
           TerraControlLogger.info("Result when sending notification: \(result)")

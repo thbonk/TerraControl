@@ -52,6 +52,10 @@ public extension Pushover {
     _ = notification.priority(priority)
     _ = notification.sound(sound)
 
+    if priority == .emergency {
+      _ = notification.expires(in: 3600)
+    }
+
     if let _ = devices {
       _ = notification.devices(devices!)
     }
