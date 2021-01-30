@@ -99,7 +99,7 @@ public class TerraController: DeviceDelegate {
                         name: configuration.bridgeName,
                 serialNumber: "4dbdb2ea-fea0-4e42-bc98-4a5de21c74fd",
                 manufacturer: "thbonk",
-                       model: "TerraController Brdige",
+                       model: "TerraController Bridge",
             firmwareRevision: revision),
           setupCode: Device.SetupCode(stringLiteral: configuration.setupCode),
         storage: FileStorage(filename: configuration.stateFile),
