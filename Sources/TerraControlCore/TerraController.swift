@@ -118,6 +118,19 @@ public class TerraController: DeviceDelegate {
 
     eventScheduler = Scheduler.schedule(at: Date().startOfDay, repeating: .seconds(24 * 60 * 60), block: scheduleEvents)
 
+    if let push = pushover {
+      push
+        .sendNotification(
+          "Starting TerraController",
+          to: [configuration.pushoverUserKey!],
+          title: "TerraControl Information",
+          priority: .emergency,
+          sound: .spacealarm) { result in
+
+          TerraControlLogger.info("Result when sending notification: \(result)")
+        }
+    }
+
     while keepRunning {
       RunLoop.current.run(mode: .default, before: Date.distantFuture)
     }

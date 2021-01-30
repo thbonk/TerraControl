@@ -52,6 +52,20 @@ class Service {
 
     server["/stop"] = { request in
       Service.shared.controller?.stop()
+
+      if let push = Service.shared.pushover {
+        push
+          .sendNotification(
+            "Stopped TerraController",
+            to: [Service.shared.pushoverUserKey],
+            title: "TerraControl Information",
+            priority: .emergency,
+            sound: .spacealarm) { result in
+
+            TerraControlLogger.info("Result when sending notification: \(result)")
+          }
+      }
+
       return .ok(.htmlBody("OK"))
     }
 
