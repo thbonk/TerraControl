@@ -382,7 +382,7 @@ public class TerraController: DeviceDelegate {
 
   private func moonSet(for program: Program) throws -> Date {
     // TODO Calculate moon set
-    return try moonRise(for: program).addingTimeInterval(120)
+    return try moonRise(for: program).addingTimeInterval(120 * 60)
   }
 
   private func sunrise(for program: Program) throws -> Date {
