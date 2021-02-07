@@ -167,7 +167,10 @@ public struct TerraControlConfiguration: Hashable, Codable {
     let now = Date().localDate
     var current: Program? = nil
 
-    sortedPrograms
+    programs
+      .sorted { (p1, p2) -> Bool in
+        return p1.startDate(for: timezone) > p2.startDate(for: timezone)
+      }
       .forEach { program in
         guard current == nil else {
           return
