@@ -309,9 +309,9 @@ public class TerraController: DeviceDelegate {
   private func scheduleHeatOff(_ program: Program) throws -> Scheduler {
     let halfHeatHours = heatHours(for: program) / 2
     let latestHeatOffTime =
-      try sunrise(for: program) < latestHeatTime(for: program)
-      ? latestHeatTime(for: program)
-      : try sunrise(for: program)
+      try sunset(for: program) < latestHeatTime(for: program)
+      ? try sunset(for: program)
+      : latestHeatTime(for: program)
     var heatOffTime =
       Date(timeIntervalSince1970: try noon(for: program).timeIntervalSince1970 + (halfHeatHours * 60 * 60))
 
