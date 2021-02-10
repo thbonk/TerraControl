@@ -22,6 +22,8 @@ import Foundation
 import Logging
 import HAP
 import Pushover
+import Swifter
+import Stencil
 
 public private(set) var TerraControlLogger: Logger = {
   let logger = Logger(label: "TerraController")
@@ -54,6 +56,7 @@ public class TerraController: DeviceDelegate {
   private var location: Solar.Location
   private var eventScheduler: Scheduler!
   private var switchEvents = [Scheduler]()
+  private let webServer = HttpServer()
 
 
   // MARK: - Initialization
@@ -106,6 +109,12 @@ public class TerraController: DeviceDelegate {
         accessories: [lightSwitch, heatlightSwitch, moonlightSwitch])
     server = try Server(device: bridge)
     bridge.delegate = self
+
+    do {
+      try startWebServer()
+    } catch {
+      TerraControlLogger.error("Error while starting the web server: \(error)")
+    }
   }
 
 
@@ -227,7 +236,6 @@ public class TerraController: DeviceDelegate {
   }
 
   private func scheduleMoonlightOn(_ program: Program) throws -> Scheduler {
-
     return Scheduler.schedule(at: try moonRise(for: program)) {
       self.moonlightSwitch.`switch`.powerState.value = true
 
@@ -244,6 +252,19 @@ public class TerraController: DeviceDelegate {
   }
 
   private func scheduleLightOn(_ program: Program) throws -> Scheduler {
+    let time = try lightOnTime(program)
+
+    TerraControlLogger.info("Scheduling LightOn for >\(time)<")
+
+    return
+      Scheduler.schedule(at: time) {
+        self.lightSwitch.`switch`.powerState.value = true
+
+        self.logAndNotify("LightOn triggered at >\(Date().localDate)<")
+      }
+  }
+
+  private func lightOnTime(_ program: Program) throws -> Date {
     let halfLightHours = lightHours(for: program) / 2
     let earliestLightOnTime =
       try sunrise(for: program) < earliestLightTime(for: program)
@@ -254,17 +275,23 @@ public class TerraController: DeviceDelegate {
 
     lightOnTime = lightOnTime < earliestLightOnTime ? earliestLightOnTime : lightOnTime
 
-    TerraControlLogger.info("Scheduling LightOn for >\(lightOnTime)<")
-
-    return
-      Scheduler.schedule(at: lightOnTime) {
-        self.lightSwitch.`switch`.powerState.value = true
-
-        self.logAndNotify("LightOn triggered at >\(Date().localDate)<")
-      }
+    return lightOnTime
   }
 
   private func scheduleHeatOn(_ program: Program) throws -> Scheduler {
+    let time = try heatOnTime(program)
+
+    TerraControlLogger.info("Scheduling HeatOn for >\(time)<")
+
+    return
+      Scheduler.schedule(at: time) {
+        self.heatlightSwitch.`switch`.powerState.value = true
+
+        self.logAndNotify("HeatOn triggered at >\(Date().localDate)<")
+      }
+  }
+
+  private func heatOnTime(_ program: Program) throws -> Date {
     let halfHeatHours = heatHours(for: program) / 2
     let earliestHeatOnTime =
       try sunrise(for: program) < earliestHeatTime(for: program)
@@ -275,17 +302,23 @@ public class TerraController: DeviceDelegate {
 
     heatOnTime = heatOnTime < earliestHeatOnTime ? earliestHeatOnTime : heatOnTime
 
-    TerraControlLogger.info("Scheduling HeatOn for >\(heatOnTime)<")
-
-    return
-      Scheduler.schedule(at: heatOnTime) {
-        self.heatlightSwitch.`switch`.powerState.value = true
-
-        self.logAndNotify("HeatOn triggered at >\(Date().localDate)<")
-      }
+    return heatOnTime
   }
 
   private func scheduleLightOff(_ program: Program) throws -> Scheduler {
+    let time = try lightOffTime(program)
+
+    TerraControlLogger.info("Scheduling LightOff for >\(time)<")
+
+    return
+      Scheduler.schedule(at: time) {
+        self.lightSwitch.`switch`.powerState.value = false
+
+        self.logAndNotify("LightOff triggered at >\(Date().localDate)<")
+      }
+  }
+
+  private func lightOffTime(_ program: Program) throws -> Date {
     let halfLightHours = lightHours(for: program) / 2
     let latestLightOffTime =
       try sunset(for: program) > latestLightTime(for: program)
@@ -296,17 +329,23 @@ public class TerraController: DeviceDelegate {
 
     lightOffTime = lightOffTime > latestLightOffTime ? latestLightOffTime : lightOffTime
 
-    TerraControlLogger.info("Scheduling LightOff for >\(lightOffTime)<")
-
-    return
-      Scheduler.schedule(at: lightOffTime) {
-        self.lightSwitch.`switch`.powerState.value = false
-
-        self.logAndNotify("LightOff triggered at >\(Date().localDate)<")
-      }
+    return lightOffTime
   }
 
   private func scheduleHeatOff(_ program: Program) throws -> Scheduler {
+    let time = try heatOffTime(program)
+
+    TerraControlLogger.info("Scheduling HeatOff for >\(time)<")
+
+    return
+      Scheduler.schedule(at: time) {
+        self.heatlightSwitch.`switch`.powerState.value = false
+
+        self.logAndNotify("HeatOff triggered at >\(Date().localDate)<")
+      }
+  }
+
+  private func heatOffTime(_ program: Program) throws -> Date {
     let halfHeatHours = heatHours(for: program) / 2
     let latestHeatOffTime =
       try sunset(for: program) < latestHeatTime(for: program)
@@ -317,14 +356,7 @@ public class TerraController: DeviceDelegate {
 
     heatOffTime = heatOffTime > latestHeatOffTime ? latestHeatOffTime : heatOffTime
 
-    TerraControlLogger.info("Scheduling HeatOff for >\(heatOffTime)<")
-
-    return
-      Scheduler.schedule(at: heatOffTime) {
-        self.heatlightSwitch.`switch`.powerState.value = false
-
-        self.logAndNotify("HeatOff triggered at >\(Date().localDate)<")
-      }
+    return heatOffTime
   }
 
 
@@ -348,21 +380,13 @@ public class TerraController: DeviceDelegate {
   }
 
   private func lightHours(for program: Program) -> Double {
-    var hours = program.lightHours
-
-    if program.increaseLightHoursPerDay > 0 {
-      hours = hours + daysSinceStart(of: program) * program.increaseLightHoursPerDay
-    }
+    let hours = program.lightHours + daysSinceStart(of: program) * program.increaseLightHoursPerDay
 
     return hours
   }
 
   private func heatHours(for program: Program) -> Double {
-    var hours = program.heatHours
-
-    if program.increaseHeatHoursPerDay > 0 {
-      hours = hours + daysSinceStart(of: program) * program.increaseHeatHoursPerDay
-    }
+    let hours = program.heatHours + daysSinceStart(of: program) * program.increaseHeatHoursPerDay
 
     return hours
   }
@@ -419,5 +443,146 @@ public class TerraController: DeviceDelegate {
 
     now.time = program.latestHeatTime
     return now
+  }
+
+
+  // MARK: - WebServer
+
+  private func startWebServer() throws {
+    webServer["/"] = handleControllerStatus(request:)
+    try webServer.start(1337, forceIPv4: true, priority: .background)
+  }
+
+  private func handleControllerStatus(request: HttpRequest) -> HttpResponse {
+    do {
+      return .ok(.htmlBody(try statusPage()))
+    } catch {
+      return .internalServerError
+    }
+  }
+
+  private func statusPage() throws -> String {
+    let template = """
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>TerraController Status</title>
+      </head>
+
+      <body>
+        <table>
+          <tr>
+            <td>Local Date and Time:</td>
+            <td>{{ dateAndTime }}</td>
+          </tr>
+          <tr>
+            <td>Current Program:</td>
+            <td>{{ currentProgram }}</td>
+          </tr>
+          <tr>
+            <td>Sunrise:</td>
+            <td>{{ sunrise }}</td>
+          </tr>
+          <tr>
+            <td>Noon:</td>
+            <td>{{ noon }}</td>
+          </tr>
+          <tr>
+            <td>Sunset:</td>
+            <td>{{ sunset }}</td>
+          </tr>
+          <tr>
+            <td>Moonise:</td>
+            <td>{{ moonrise }}</td>
+          </tr>
+          <tr>
+            <td>Moonset:</td>
+            <td>{{ moonset }}</td>
+          </tr>
+          <tr>
+            <td>Light Hours:</td>
+            <td>{{ lightHours }}</td>
+          </tr>
+          <tr>
+            <td>Heat Hours:</td>
+            <td>{{ heatHours }}</td>
+          </tr>
+          <tr>
+            <td>Light on:</td>
+            <td>{{ lightOn }}</td>
+          </tr>
+          <tr>
+            <td>Heat Light on:</td>
+            <td>{{ heatLightOn }}</td>
+          </tr>
+          <tr>
+            <td>Light off:</td>
+            <td>{{ lightOff }}</td>
+          </tr>
+          <tr>
+            <td>Heat Light off:</td>
+            <td>{{ heatLightOff }}</td>
+          </tr>
+          <tr>
+            <td>Moon Light enabled:</td>
+            <td>{{ moonLightEnabled }}</td>
+          </tr>
+          <tr>
+            <td>Moon Light on:</td>
+            <td>{{ moonLightOn }}</td>
+          </tr>
+          <tr>
+            <td>Moon Light off:</td>
+            <td>{{ moonLightOff }}</td>
+          </tr>
+        </table>
+      </body>
+    </html>
+    """
+
+    let environment = Environment()
+    return try environment.renderTemplate(string: template, context: try templateContext())
+  }
+
+  private func templateContext() throws -> [String:Any] {
+    if let program = configuration.currentProgram {
+      return [
+        "dateAndTime": Date().localDate,
+        "currentProgram": program.name,
+        "sunrise": try sunrise(for: program).localDate,
+        "noon": try noon(for: program).localDate,
+        "sunset": try sunset(for: program).localDate,
+        "moonrise": try moonRise(for: program).localDate,
+        "moonset": try moonSet(for: program).localDate,
+        "lightHours": lightHours(for: program),
+        "heatHours": heatHours(for: program),
+        "lightOn": try lightOnTime(program).localDate,
+        "heatLightOn": try heatOnTime(program).localDate,
+        "lightOff": try lightOffTime(program).localDate,
+        "heatLightOff": try heatOffTime(program).localDate,
+        "moonLightEnabled": program.moonlightEnabled,
+        "moonLightOn": try moonRise(for: program).localDate,
+        "moonLightOff": try moonSet(for: program).localDate
+      ]
+    } else {
+      return [
+        "dateAndTime": Date(),
+        "currentProgram": "none",
+        "sunrise": "",
+        "noon": "",
+        "sunset": "",
+        "moonrise": "",
+        "moonset": "",
+        "lightHours": "",
+        "heatHours": "",
+        "lightOn": "",
+        "heatLightOn": "",
+        "lightOff": "",
+        "heatLightOff": "",
+        "moonLightEnabled": "",
+        "moonLightOn": "",
+        "moonLightOff": ""
+      ]
+    }
   }
 }
