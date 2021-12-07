@@ -1,8 +1,8 @@
 //
-//  XCTestManifests.swift
+//  main.swift
 //  TerraControl
 //
-//  Created by Thomas Bonk on 24.01.21.
+//  Created by Thomas Bonk on 05.12.21.
 //  Copyright 2021 Thomas Bonk <thomas@meandmymac.de>
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,12 +19,4 @@
 //
 
 import XCTest
-
-#if !canImport(ObjectiveC)
-public func allTests() -> [XCTestCaseEntry] {
-  return [
-    TerraControlConfigurationSpec.allTests,
-    TerraControlCoreSpec.allTests
-  ]
-}
-#endif
+@testable import TerraControlCore

@@ -1,8 +1,8 @@
 //
 //  main.swift
 //  TerraControl
-//
-//  Created by Thomas Bonk on 26.01.21.
+//  
+//  Created by Thomas Bonk on 05.12.21.
 //  Copyright 2021 Thomas Bonk <thomas@meandmymac.de>
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,12 +31,12 @@ let main = command(
     default: false,
     description: "Stop a running TerraController instance")) { (configurationFile: String, stop: Bool) in
 
-  guard !stop else {
-    Service.shared.stopService()
-    return
-  }
+      guard !stop else {
+        TerraControlService.shared.stop()
+        return
+      }
 
-  Service.shared.startService(configurationFile: configurationFile)
-}
+      TerraControlService.shared.start() //(configurationFile: configurationFile)
+    }
 
 main.run()

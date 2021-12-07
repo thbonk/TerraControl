@@ -1,8 +1,8 @@
 //
-//  TerraControlCoreSpec.swift
-//  TerraControl
+//  Configuration+Extrensions.swift
+//  TerraControlCore
 //
-//  Created by Thomas Bonk on 24.01.21.
+//  Created by Thomas Bonk on 07.12.21.
 //  Copyright 2021 Thomas Bonk <thomas@meandmymac.de>
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,22 +18,32 @@
 //  limitations under the License.
 //
 
-struct TerraControl {
-  var text = "Hello, World!"
-}
-
-
 import Foundation
-import Quick
-import Nimble
 
-@testable import TerraControlCore
+// MARK: - Configuration
 
-final class TerraControlCoreSpec: QuickSpec {
+extension Configuration {
 
-  public override func spec() {
-    describe("test") {
-    }
+  // MARK: - Public Properties
+
+  public var timezone: TimeZone? {
+    return TimeZone(identifier: tz)
   }
 }
 
+
+// MARK: - Terrarium
+
+extension Terrarium {
+
+  // MARK: - Public Methods
+
+  func program(for date: Date) -> Program? {
+    // TODO
+    return nil
+  }
+
+  func program() -> Program? {
+    return program(for: Date())
+  }
+}
