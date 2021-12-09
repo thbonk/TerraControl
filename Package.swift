@@ -43,6 +43,7 @@ let package = Package(
       ]),
     .testTarget(
       name: "TerraControlCoreTests",
-      dependencies: ["TerraControlCore", "Quick", "Nimble"]),
+      dependencies: ["TerraControlCore", "Quick", "Nimble"],
+      resources: [.process("Testdata/configuration.json")]),
   ]
 )

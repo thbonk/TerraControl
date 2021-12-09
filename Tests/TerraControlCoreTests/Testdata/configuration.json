@@ -1,0 +1,92 @@
+{
+  "tz": "Europe/Berlin",
+  "location": { "latitude": 49.3099737, "longitude": 7.2831639 },
+  "setupCode": "123-44-321",
+  "bridgeName": "TerraControl",
+  "terrariums": [
+    {
+      "name": "Leos",
+      "switches": [
+        {
+          "id": "t-leos-light",
+          "name": "Light"
+        },
+        {
+          "id": "t-leos-heat-light",
+          "name": "Heat Light"
+        },
+        {
+          "id": "t-leos-moon-light",
+          "name": "Moon Light"
+        }
+      ],
+      "programs": [
+        {
+          "name": "Ausleitung Winterruhe - Stufe 1",
+          "start": { "day": 1, "month": 3 },
+          "rules": [
+            {
+              "hoursOn": 0,
+              "switches": ["t-leos-light", "t-leos-heat-light"]
+            }
+          ]
+        },
+        {
+          "name": "Ausleitung Winterruhe - Stufe 2",
+          "start": { "day": 15, "month": 3 },
+          "rules": [
+            {
+              "hoursOn": 6,
+              "switches": ["t-leos-light"]
+            },
+            {
+              "hoursOn": 0.1,
+              "hoursOnIncrementPerDay": 0.2,
+              "switches": ["t-leos-heat-light"]
+            }
+          ]
+        },
+        {
+          "name": "Normalbetrieb",
+          "start": { "day": 1, "month": 4 },
+          "rules": [
+            {
+              "hoursOn": 11,
+              "switches": ["t-leos-light"]
+            },
+            {
+              "hoursOn": 10,
+              "switches": ["t-leos-heat-light"]
+            }
+          ]
+        },
+        {
+          "name": "Einleitung Winterruhe",
+          "start": { "day": 1, "month": 10 },
+          "rules": [
+            {
+              "hoursOn": 8,
+              "hoursOnIncrementPerDay": -0.2,
+              "switches": ["t-leos-light"]
+            },
+            {
+              "hoursOn": 6,
+              "hoursOnIncrementPerDay": -0.4,
+              "switches": ["t-leos-heat-light"]
+            }
+          ]
+        },
+        {
+          "name": "Winterruhe",
+          "start": { "day": 20, "month": 10 },
+          "rules": [
+            {
+              "hoursOn": 0,
+              "switches": ["t-leos-light", "t-leos-heat-light"]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

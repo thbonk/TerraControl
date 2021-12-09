@@ -157,8 +157,8 @@ struct Program: Hashable, Codable {
   // MARK: - Public Properties
 
   public var name: String
-  public var start: StartDay
-  public var triggers: [Trigger]
+  public var start: Day
+  public var rules: [Rule]
 
 
   // MARK: - Coding Keys
@@ -166,7 +166,7 @@ struct Program: Hashable, Codable {
   enum CodingKeys: String, CodingKey {
     case name
     case start
-    case triggers
+    case rules
   }
 
 
@@ -184,12 +184,34 @@ struct Program: Hashable, Codable {
 
 // MARK: - StartDay
 
-struct StartDay: Hashable, Codable {
+struct Day: Hashable, Codable, Comparable {
+
+  // MARK: - Public Enums
+
+  public enum IllegalValue: Error {
+    case dayOutOfRange
+    case monthOutOfRange
+  }
+
 
   // MARK: - Public Properties
 
-  public var day: String
-  public var month: String
+  public var day: Int
+  public var month: Int
+
+  let daysPerMonth = [
+    31, // January
+    28, // February
+    31, // March
+    30, // April
+    31, // May
+    30, // June
+    31, // July
+    31, // August
+    30, // September
+    31, // October
+    30, // November
+    31] // December
 
 
   // MARK: - Coding Keys
@@ -200,9 +222,52 @@ struct StartDay: Hashable, Codable {
   }
 
 
+  // MARK: - Initialization
+
+  public init(day: Int, month: Int) throws {
+
+
+    if month < 1 || month > 12 {
+      throw IllegalValue.monthOutOfRange
+    }
+    if day < 1 || day > daysPerMonth[month - 1] {
+      throw IllegalValue.dayOutOfRange
+    }
+
+    self.day = day
+    self.month = month
+  }
+
+
+  // MARK: - Comparable
+
+  public static func < (lhs: Day, rhs: Day) -> Bool {
+    let lhsVal = lhs.day << 8 | lhs.month
+    let rhsVal = rhs.day << 8 | rhs.month
+
+    return lhsVal < rhsVal
+  }
+
+  public static func <= (lhs: Day, rhs: Day) -> Bool {
+    return (lhs < rhs) || (lhs == rhs)
+  }
+
+  public static func > (lhs: Day, rhs: Day) -> Bool {
+    return (lhs != rhs) && !(lhs < rhs)
+  }
+
+  public static func >= (lhs: Day, rhs: Day) -> Bool {
+    return (lhs > rhs) || (lhs == rhs)
+  }
+
+  public static func != (lhs: Day, rhs: Day) -> Bool {
+    return !(lhs == rhs)
+  }
+
+
   // MARK: - Hashable
 
-  public static func == (lhs: StartDay, rhs: StartDay) -> Bool {
+  public static func == (lhs: Day, rhs: Day) -> Bool {
     return lhs.hashValue == rhs.hashValue
   }
 
@@ -215,33 +280,34 @@ struct StartDay: Hashable, Codable {
 
 // MARK: - Trigger
 
-struct Trigger: Hashable, Codable {
+struct Rule: Hashable, Codable {
 
   // MARK: - Public Properties
 
-  public var timestamp: String
+  // Hours the switches are turned on is around noon
+  // turn on : noon - hoursOn / 2
+  // turn off: noon + hoursOn / 2
+  public var hoursOn: Double
+  public var hoursOnIncrementPerDay: Double = 0
   public var switches: [String]   // array of switch IDs
-  public var switchState: Bool
 
 
   // MARK: - Coding Keys
 
   enum CodingKeys: String, CodingKey {
-    case timestamp
+    case hoursOn
     case switches
-    case switchState
   }
 
 
   // MARK: - Hashable
 
-  public static func == (lhs: Trigger, rhs: Trigger) -> Bool {
+  public static func == (lhs: Rule, rhs: Rule) -> Bool {
     return lhs.hashValue == rhs.hashValue
   }
 
   public func hash(into hasher: inout Hasher) {
-    hasher.combine(timestamp)
+    hasher.combine(hoursOn)
     hasher.combine(switches)
-    hasher.combine(switchState)
   }
 }

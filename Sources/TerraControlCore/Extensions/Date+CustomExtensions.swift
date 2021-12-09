@@ -1,8 +1,8 @@
 //
-//  main.swift
-//  TerraControl
+//  Date+CustomExtensions.swift
+//  TerraControlCore
 //
-//  Created by Thomas Bonk on 05.12.21.
+//  Created by Thomas Bonk on 09.12.21.
 //  Copyright 2021 Thomas Bonk <thomas@meandmymac.de>
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,5 +18,14 @@
 //  limitations under the License.
 //
 
-import XCTest
-@testable import TerraControlCore
+import Foundation
+
+extension Date {
+
+  // MARK: - Public Properties
+
+  var day: Day {
+    return
+      try! Day(day: Calendar.current.component(.day, from: self), month: Calendar.current.component(.month, from: self))
+  }
+}
