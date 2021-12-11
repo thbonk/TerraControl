@@ -199,7 +199,26 @@ struct Day: Hashable, Codable, Comparable {
   public var day: Int
   public var month: Int
 
-  let daysPerMonth = [
+  public var dayInYear: Int {
+    guard month != 1 else {
+      return day
+    }
+
+    var days = 0
+
+    for month in 0..<(month - 1) {
+      days += daysPerMonth[month]
+    }
+
+    days += day
+
+    return days
+  }
+
+
+  // MARK: - Private Properties
+
+  private let daysPerMonth = [
     31, // January
     28, // February
     31, // March
@@ -225,8 +244,6 @@ struct Day: Hashable, Codable, Comparable {
   // MARK: - Initialization
 
   public init(day: Int, month: Int) throws {
-
-
     if month < 1 || month > 12 {
       throw IllegalValue.monthOutOfRange
     }
@@ -239,13 +256,17 @@ struct Day: Hashable, Codable, Comparable {
   }
 
 
+  // MARK: - Public Operators
+
+  public static func - (lhs: Day, rhs: Day) -> Int {
+    return lhs.dayInYear - rhs.dayInYear
+  }
+  
+
   // MARK: - Comparable
 
   public static func < (lhs: Day, rhs: Day) -> Bool {
-    let lhsVal = lhs.day << 8 | lhs.month
-    let rhsVal = rhs.day << 8 | rhs.month
-
-    return lhsVal < rhsVal
+    return lhs.dayInYear < rhs.dayInYear
   }
 
   public static func <= (lhs: Day, rhs: Day) -> Bool {

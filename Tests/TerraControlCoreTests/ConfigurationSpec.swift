@@ -24,6 +24,17 @@ import Nimble
 
 @testable import TerraControlCore
 
+extension Date {
+  init(day: Int, month: Int, year: Int) {
+    var dateComponents = DateComponents()
+    dateComponents.year = year
+    dateComponents.month = month
+    dateComponents.day = day
+
+    self = Calendar(identifier: .gregorian).date(from: dateComponents)!
+  }
+}
+
 final class ConfigurationSpec: QuickSpec {
 
   public override func spec() {
@@ -94,19 +105,36 @@ final class ConfigurationSpec: QuickSpec {
       }
     }
 
-    describe("Load configuration from file") {
+    describe("Testing configuration logic") {
+      var config: TerraControlCore.Configuration!
+
       it("Load configuration from file") {
         expect {
           let configUrl = Bundle.module.url(forResource: "configuration", withExtension: "json")!
           let data = try Data(contentsOf: configUrl)
           let decoder = JSONDecoder()
-          let config = try decoder.decode(Configuration.self, from: data)
+
+          config = try decoder.decode(Configuration.self, from: data)
 
           expect(config.timezone!.identifier).to(equal("Europe/Berlin"))
           expect(config.location.latitude).to(equal(49.3099737))
           expect(config.location.longitude).to(equal(7.2831639))
         }
         .toNot(throwError())
+      }
+
+      it("Selecting the correct program for a date") {
+        var program = config.terrariums[0].program(for: Date(day: 10, month: 1, year: 2022))
+        expect(program!.name).to(equal("Winterruhe"))
+
+        program = config.terrariums[0].program(for: Date(day: 1, month: 10, year: 2022))
+        expect(program!.name).to(equal("Einleitung Winterruhe"))
+
+        program = config.terrariums[0].program(for: Date(day: 1, month: 12, year: 2022))
+        expect(program!.name).to(equal("Winterruhe"))
+
+        program = config.terrariums[0].program(for: Date(day: 30, month: 6, year: 2022))
+        expect(program!.name).to(equal("Normalbetrieb"))
       }
     }
   }

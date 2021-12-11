@@ -20,35 +20,6 @@
 
 import Foundation
 
-// MARK: - Day
-
-extension Day {
-
-  // MARK: - Public Properties
-
-  public var dayInYear: Int {
-    guard month != 1 else {
-      return day
-    }
-
-    var days = 0
-
-    for month in 0..<(month - 1) {
-      days += daysPerMonth[month]
-    }
-
-    days += day
-
-    return days
-  }
-
-
-  // MARK: - Public Operators
-
-  public static func - (lhs: Day, rhs: Day) -> Int {
-    return lhs.dayInYear - rhs.dayInYear
-  }
-}
 
 // MARK: - Configuration
 
@@ -69,9 +40,30 @@ extension Terrarium {
   // MARK: - Public Methods
 
   func program(for date: Date) -> Program? {
-    
-    // TODO
-    return nil
+    var currentProgram: Program? = nil
+    let today = date.day
+    let sortedPrograms =
+      programs
+        .sorted { p1, p2 in
+          p1.start > p2.start
+        }
+
+    sortedPrograms
+      .forEach { program in
+        guard currentProgram == nil else {
+          return
+        }
+
+        if program.start <= today {
+          currentProgram = program
+        }
+      }
+
+    guard currentProgram != nil else {
+      return programs.last
+    }
+
+    return currentProgram
   }
 
   func currentProgram() -> Program? {
