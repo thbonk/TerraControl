@@ -136,6 +136,13 @@ final class ConfigurationSpec: QuickSpec {
         program = config.terrariums[0].program(for: Date(day: 30, month: 6, year: 2022))
         expect(program!.name).to(equal("Normalbetrieb"))
       }
+
+      it("Validation of configuration is successful") {
+        expect {
+          try config.validate()
+        }
+        .toNot(throwError())
+      }
     }
   }
 

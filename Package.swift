@@ -20,6 +20,7 @@ let package = Package(
     .package(url: "https://github.com/Bouke/HAP", .branch("master")),
     .package(url: "https://github.com/apple/swift-log.git", Version("0.0.0") ..< Version("2.0.0")),
     .package(url: "https://github.com/kylef/Commander", Version("0.9.1") ..< Version("1.0.0")),
+    .package(url: "https://github.com/thbonk/Pushover", .branch("master")),
     .package(name: "Swifter", url: "https://github.com/httpswift/swifter", from: "1.5.0"),
     .package(url: "https://github.com/Quick/Quick", from: "3.0.0"),
     .package(url: "https://github.com/Quick/Nimble", from: "9.0.0"),
@@ -39,6 +40,7 @@ let package = Package(
       name: "TerraControlCore",
       dependencies: [
         "HAP",
+        "Pushover",
         .product(name: "Logging", package: "swift-log"),
       ]),
     .testTarget(

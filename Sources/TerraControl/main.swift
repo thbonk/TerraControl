@@ -20,23 +20,32 @@
 
 import Foundation
 import Commander
+import TerraControlCore
 
 let main = command(
   Option<String>(
     "configurationFile",
     default: "/etc/terracontrol.config",
     description: "Path to the configuration file"),
+  Option<String>(
+    "stateFile",
+    default: "/var/cache/terracontrol/terracontrol.state",
+    description: "Path to the state file"),
   Flag(
     "stop",
     default: false,
-    description: "Stop a running TerraController instance")) { (configurationFile: String, stop: Bool) in
+    description: "Stop a running TerraController instance")) { (configurationFile: String, stateFile: String, stop: Bool) in
 
       guard !stop else {
         TerraControlService.shared.stop()
         return
       }
 
-      TerraControlService.shared.start() //(configurationFile: configurationFile)
+      do {
+        try TerraControlService.shared.start(configurationFile: configurationFile, stateFile: stateFile)
+      } catch {
+        print_err("Error while starting TerraControl: \(error)")
+      }
     }
 
 main.run()

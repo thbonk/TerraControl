@@ -1,8 +1,8 @@
 //
-//  LinuxMain.swift
-//  TerraControlCoreTests
+//  PrintError.swift
+//  TerraControlCore
 //
-//  Created by Thomas Bonk on 07.12.21.
+//  Created by Thomas Bonk on 11.12.21.
 //  Copyright 2021 Thomas Bonk <thomas@meandmymac.de>
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,11 +18,17 @@
 //  limitations under the License.
 //
 
-import XCTest
-import Quick
+import Foundation
 
-QCKMain([
-  DateExtensionsSpec.self,
-  ConfigurationSpec.self
-])
+fileprivate var standardError = FileHandle.standardError
 
+extension FileHandle: TextOutputStream {
+  public func write(_ string: String) {
+    let data = Data(string.utf8)
+    self.write(data)
+  }
+}
+
+public func print_err(_ message: String) {
+  print(message, to: &standardError)
+}

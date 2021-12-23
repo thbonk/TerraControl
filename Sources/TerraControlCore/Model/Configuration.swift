@@ -20,6 +20,14 @@
 
 import Foundation
 
+
+private func check(_ condition: Bool, error: Error) throws {
+  guard condition else {
+    throw error
+  }
+}
+
+
 // MARK: - GeoLocation
 
 /// This is the location of the terrarium. It is used to calculate sun and moon events.
@@ -54,7 +62,17 @@ public struct GeoLocation: Hashable, Codable {
 
 // MARK: - Configuration
 
-struct Configuration: Hashable, Codable {
+public struct Configuration: Hashable, Codable {
+
+  // MARK: - Errors
+
+  public enum ConfigurationError: String, Error {
+    case noTimezoneGiven          = "Configuration has an empty timezone"
+    case noSetupCodeGiven         = "Configuration has an empty setup code"
+    case noBridgeNameGiven        = "Configuration has an empty bridge name"
+    case douplicateTerrariumNames = "Configuration contains terrariums with equal names"
+  }
+
 
   // MARK: - Public Properties
 
@@ -62,6 +80,8 @@ struct Configuration: Hashable, Codable {
   public var location: GeoLocation
   public var setupCode: String
   public var bridgeName: String
+  public var pushoverToken: String?
+  public var pushoverUserKey: String?
   public var terrariums: [Terrarium]
 
 
@@ -72,6 +92,8 @@ struct Configuration: Hashable, Codable {
     case location
     case setupCode
     case bridgeName
+    case pushoverToken
+    case pushoverUserKey
     case terrariums
   }
 
@@ -85,12 +107,38 @@ struct Configuration: Hashable, Codable {
   public func hash(into hasher: inout Hasher) {
     hasher.combine(bridgeName)
   }
+
+
+  // MARK: - Validation
+
+  public func validate() throws {
+    try check(!tz.isEmpty, error: ConfigurationError.noTimezoneGiven)
+    try check(!setupCode.isEmpty, error: ConfigurationError.noSetupCodeGiven)
+    try check(!bridgeName.isEmpty, error: ConfigurationError.noBridgeNameGiven)
+
+    try check(
+      Dictionary(grouping: terrariums, by: \.name).allSatisfy( {(_, value: [Any]) in value.count == 1 }),
+      error: ConfigurationError.douplicateTerrariumNames)
+
+    try terrariums.forEach { terrarium in
+      try terrarium.validate()
+    }
+  }
 }
 
 
 // MARK: - Terrarium
 
-struct Terrarium: Hashable, Codable {
+public struct Terrarium: Hashable, Codable {
+
+  // MARK: - Errors
+
+  public enum ConfigurationError: String, Error {
+    case noNameGiven          = "Terrarium configuration has an empty name"
+    case duplicateSwitchIds     = "Terrarium configuration has an switches with duplicate IDs"
+    case duplicateProgramNames  = "Terrarium configuration has an programs with duplicate names"
+  }
+
 
   // MARK: - Public Properties
 
@@ -117,17 +165,52 @@ struct Terrarium: Hashable, Codable {
   public func hash(into hasher: inout Hasher) {
     hasher.combine(name)
   }
+
+
+  // MARK: - Validation
+
+  public func validate() throws {
+    try check(!name.isEmpty, error: ConfigurationError.noNameGiven)
+    try check(
+      Dictionary(grouping: switches, by: \.id).allSatisfy( {(_, value: [Any]) in value.count == 1 }),
+      error: ConfigurationError.duplicateSwitchIds)
+    try check(
+      Dictionary(grouping: programs, by: \.name).allSatisfy( {(_, value: [Any]) in value.count == 1 }),
+      error: ConfigurationError.duplicateSwitchIds)
+    try switches.forEach { sw in
+      try sw.validate()
+    }
+    try programs.forEach { program in
+      try program.validate()
+    }
+
+    // TODO check switches of programs and their rules
+  }
 }
 
 
 // MARK: - Switch
 
-struct Switch: Hashable, Codable {
+public struct Switch: Hashable, Codable {
+
+  // MARK: - Errors
+
+  public enum ConfigurationError: String, Error {
+    case noIdGiven            = "Switch configuration has an empty id"
+    case noNameGiven          = "Switch configuration has an empty name"
+    case noSerialNumberGiven  = "Switch configuration has an empty serial number"
+    case noManufacturerGiven  = "Switch configuration has an empty manufacturer"
+    case noModelGiven         = "Switch configuration has an empty model"
+  }
+
 
   // MARK: - Public Properties
 
   public var id: String
   public var name: String
+  public var serialNumber: String = UUID().uuidString
+  public var manufacturer: String = "Thomas Bonk"
+  public var model: String = "TerraController Switch"
 
 
   // MARK: - Coding Keys
@@ -135,6 +218,9 @@ struct Switch: Hashable, Codable {
   enum CodingKeys: String, CodingKey {
     case id
     case name
+    case serialNumber
+    case manufacturer
+    case model
   }
 
 
@@ -147,12 +233,31 @@ struct Switch: Hashable, Codable {
   public func hash(into hasher: inout Hasher) {
     hasher.combine(id)
   }
+
+
+  // MARK: - Validation
+
+  public func validate() throws {
+    try check(!id.isEmpty, error: ConfigurationError.noIdGiven)
+    try check(!name.isEmpty, error: ConfigurationError.noNameGiven)
+    try check(!serialNumber.isEmpty, error: ConfigurationError.noSerialNumberGiven)
+    try check(!manufacturer.isEmpty, error: ConfigurationError.noManufacturerGiven)
+    try check(!model.isEmpty, error: ConfigurationError.noModelGiven)
+  }
 }
 
 
 // MARK: - Program
 
-struct Program: Hashable, Codable {
+public struct Program: Hashable, Codable {
+
+  // MARK: - Errors
+
+  public enum ConfigurationError: String, Error {
+    case noNameGiven          = "Program configuration has an empty name"
+    case duplicateRules       = "Program configuration has duplicate rules"
+  }
+
 
   // MARK: - Public Properties
 
@@ -179,12 +284,22 @@ struct Program: Hashable, Codable {
   public func hash(into hasher: inout Hasher) {
     hasher.combine(name)
   }
+
+
+  // MARK: - Validation
+
+  public func validate() throws {
+    try check(!name.isEmpty, error: ConfigurationError.noNameGiven)
+    try check(
+      Dictionary(grouping: rules, by: \.hashValue).allSatisfy( {(_, value: [Any]) in value.count == 1 }),
+      error: ConfigurationError.duplicateRules)
+  }
 }
 
 
 // MARK: - StartDay
 
-struct Day: Hashable, Codable, Comparable {
+public struct Day: Hashable, Codable, Comparable {
 
   // MARK: - Public Enums
 
@@ -301,7 +416,7 @@ struct Day: Hashable, Codable, Comparable {
 
 // MARK: - Trigger
 
-struct Rule: Hashable, Codable {
+public struct Rule: Hashable, Codable {
 
   // MARK: - Public Properties
 

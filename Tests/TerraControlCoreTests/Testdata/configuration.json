@@ -9,15 +9,24 @@
       "switches": [
         {
           "id": "t-leos-light",
-          "name": "Light"
+          "name": "Light",
+          "serialNumber": "ab09a7b6-5a63-11ec-bf63-0242ac130002",
+          "manufacturer": "Thomas Bonk",
+          "model": "TerraController Switch"
         },
         {
           "id": "t-leos-heat-light",
-          "name": "Heat Light"
+          "name": "Heat Light",
+          "serialNumber": "ab09abe4-5a63-11ec-bf63-0242ac130002",
+          "manufacturer": "Thomas Bonk",
+          "model": "TerraController Switch"
         },
         {
           "id": "t-leos-moon-light",
-          "name": "Moon Light"
+          "name": "Moon Light",
+          "serialNumber": "ab09adb0-5a63-11ec-bf63-0242ac130002",
+          "manufacturer": "Thomas Bonk",
+          "model": "TerraController Switch"
         }
       ],
       "programs": [
@@ -81,7 +90,7 @@
           "start": { "day": 20, "month": 10 },
           "rules": [
             {
-              "hoursOn": 0,
+              "hoursOn": 1,
               "switches": ["t-leos-light", "t-leos-heat-light"]
             }
           ]

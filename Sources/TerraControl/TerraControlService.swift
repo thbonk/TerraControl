@@ -22,6 +22,7 @@ import Foundation
 #if canImport(FoundationNetworking)
 import FoundationNetworking
 #endif
+import Logging
 import Swifter
 import TerraControlCore
 
@@ -36,18 +37,23 @@ class TerraControlService {
 
   // MARK: - Private Properties
 
+  private var configuration: Configuration!
+  private var controller: TerraController!
+
   private let ipcPort: UInt16 = 0xCAFE
   private let ipcServer: HttpServer = {
     let server = HttpServer()
 
     server["/stop"] = { request in
       // TODO
-
+      TerraControlService.shared.controller.stop()
       return .ok(.htmlBody("OK"))
     }
 
     return server
   }()
+
+  private var logger = Logger(class: TerraControlService.self)
 
 
   // MARK: - Initialization
@@ -68,13 +74,30 @@ class TerraControlService {
         with: url,
         completionHandler: { _, _, error in
           if let error = error {
-            print("Error while stoping the service: \(error)")
+            self.logger.error("Error while starting TerraControl: \(error)")
           }
-        }).resume()
+        })
+      .resume()
   }
 
-  public func start() {
-    // TODO
+  public func start(configurationFile: String, stateFile: String) throws {
+    do {
+      let configUrl = URL(fileURLWithPath: configurationFile)
+      let data = try Data(contentsOf: configUrl)
+      let decoder = JSONDecoder()
+
+      configuration = try decoder.decode(Configuration.self, from: data)
+      try configuration.validate()
+
+      controller = try TerraController(configuration: configuration, stateFile: stateFile)
+      try ipcServer.start(ipcPort, forceIPv4: true)
+      try controller!.start()
+
+      signal(SIGINT) { _ in TerraControlService.shared.stop() }
+      signal(SIGTERM) { _ in TerraControlService.shared.stop() }
+    } catch {
+      logger.error("Error while starting TerraControl: \(error)")
+    }
   }
 
 }

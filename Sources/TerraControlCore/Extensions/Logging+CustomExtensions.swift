@@ -1,8 +1,8 @@
 //
-//  LinuxMain.swift
-//  TerraControlCoreTests
+//  Logging+CustomExtensions.swift
+//  TerraControlCore
 //
-//  Created by Thomas Bonk on 07.12.21.
+//  Created by Thomas Bonk on 11.12.21.
 //  Copyright 2021 Thomas Bonk <thomas@meandmymac.de>
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,11 +18,25 @@
 //  limitations under the License.
 //
 
-import XCTest
-import Quick
+import Foundation
+import Logging
 
-QCKMain([
-  DateExtensionsSpec.self,
-  ConfigurationSpec.self
-])
+fileprivate var loggingSystemInitialized = false
 
+public extension Logger {
+
+  init<C>(`class`: C) {
+    if !loggingSystemInitialized {
+      LoggingSystem.bootstrap { label in
+        var handler = StreamLogHandler.standardOutput(label: label)
+
+        handler.logLevel = .trace
+        return handler
+      }
+
+      loggingSystemInitialized = true
+    }
+    
+    self.init(label: "\(`class`.self)")
+  }
+}

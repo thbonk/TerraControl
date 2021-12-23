@@ -20,12 +20,78 @@
 
 import Foundation
 
+struct Time {
+    
+    // MARK: - Public Properties
+    
+    var hour: Int
+    var minute: Int
+    var second: Int
+}
+
 extension Date {
-
-  // MARK: - Public Properties
-
-  var day: Day {
-    return
-      try! Day(day: Calendar.current.component(.day, from: self), month: Calendar.current.component(.month, from: self))
-  }
+    
+    // MARK: - Public Properties
+    
+    static var startOfDay: Date {
+        var now = Date()
+        
+        now.time = Time(hour: 0, minute: 0, second: 0)
+        
+        return now
+    }
+    
+    static func date(for timezone: TimeZone) -> Date {
+        /*let nowUTC = Date()
+         let timeZoneOffset = Double(timezone.secondsFromGMT(for: nowUTC))
+         
+         guard let localDate = Calendar.current.date(byAdding: .second, value: Int(timeZoneOffset), to: nowUTC) else {
+         return Date()
+         }
+         
+         return localDate*/
+        return Date().date(for: timezone)
+    }
+    
+    func date(for timezone: TimeZone) -> Date {
+        let nowUTC = self
+        let timeZoneOffset = Double(timezone.secondsFromGMT(for: nowUTC))
+        
+        guard let localDate = Calendar.current.date(byAdding: .second, value: Int(timeZoneOffset), to: nowUTC) else {
+            return Date()
+        }
+        
+        return localDate
+    }
+    
+    var day: Day {
+        return
+            try! Day(day: Calendar.current.component(.day, from: self), month: Calendar.current.component(.month, from: self))
+    }
+    
+    var time: Time {
+        get {
+            let calendar = Calendar(identifier: .gregorian)
+            let components = calendar.dateComponents([.hour, .minute, .second], from: self)
+            
+            return Time(hour: components.hour!, minute: components.minute!, second: components.second!)
+        }
+        set {
+            let calendar = Calendar(identifier: .gregorian)
+            let currentComponents = calendar.dateComponents([.year, .day, .month], from: self)
+            let components =
+            DateComponents(
+                calendar: calendar,
+                year: currentComponents.year,
+                month: currentComponents.month,
+                day: currentComponents.day,
+                hour: newValue.hour,
+                minute: newValue.minute,
+                second: newValue.second,
+                nanosecond: 0)
+            
+            
+            self = components.date!
+        }
+    }
 }
