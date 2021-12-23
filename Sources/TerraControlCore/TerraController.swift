@@ -142,15 +142,15 @@ public class TerraController: DeviceDelegate {
         switchEvents.removeAll()
         
         do {
-            let now = Date.date(for: configuration.timezone!)
-            let noon = try Solar.noon(for: now, at: location, in: configuration.timezone!).date(for: configuration.timezone!)
+            let now = Date()
+            let noon = try Solar.noon(for: now, at: location, in: configuration.timezone!)
             
             configuration
                 .terrariums
                 .forEach { terrarium in
                     let program = terrarium.currentProgram()
                     
-                    PushoverClient.shared.information(message: "Scheduling program \(program!.name) for terrarium \(terrarium.name) at \(now). Noon is at \(noon).")
+                    PushoverClient.shared.information(message: "Scheduling program \(program!.name) for terrarium \(terrarium.name) at \(now.date(for: configuration.timezone!)). Noon is at \(noon.date(for: configuration.timezone!)).")
                     
                     program?
                         .rules
