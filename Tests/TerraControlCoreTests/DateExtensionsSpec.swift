@@ -25,24 +25,24 @@ import Nimble
 @testable import TerraControlCore
 
 final class DateExtensionsSpec: QuickSpec {
-
+  
   public override func spec() {
-
+    
     describe("Testing the Date extensions") {
-
+      
       it("Getting start of day is successfull") {
         let startOfDay = Date.startOfDay
-
+        
         expect(startOfDay.time.hour).to(equal(0))
         expect(startOfDay.time.minute).to(equal(0))
         expect(startOfDay.time.second).to(equal(0))
       }
-
+      
       it("Setting the time of a date is successful") {
         var noon = Date()
-
+        
         noon.time = Time(hour: 12, minute: 0, second: 0)
-
+        
         expect(noon.time.hour).to(equal(12))
         expect(noon.time.minute).to(equal(0))
         expect(noon.time.second).to(equal(0))

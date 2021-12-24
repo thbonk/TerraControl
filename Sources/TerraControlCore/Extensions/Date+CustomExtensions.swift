@@ -33,6 +33,26 @@ extension Date {
     
     // MARK: - Public Properties
     
+    static var yesterday: Date {
+        return Date().dayBefore
+    }
+    
+    static var tomorrow:  Date {
+        return Date().dayAfter
+    }
+    
+    var dayBefore: Date {
+        return Calendar.current.date(byAdding: .day, value: -1, to: noon)!
+    }
+    
+    var dayAfter: Date {
+        return Calendar.current.date(byAdding: .day, value: 1, to: noon)!
+    }
+    
+    var noon: Date {
+        return Calendar.current.date(bySettingHour: 12, minute: 0, second: 0, of: self)!
+    }
+    
     static var startOfDay: Date {
         var now = Date()
         
@@ -41,15 +61,15 @@ extension Date {
         return now
     }
     
+    var startOfDay: Date {
+        var now = self
+        
+        now.time = Time(hour: 0, minute: 0, second: 0)
+        
+        return now
+    }
+    
     static func date(for timezone: TimeZone) -> Date {
-        /*let nowUTC = Date()
-         let timeZoneOffset = Double(timezone.secondsFromGMT(for: nowUTC))
-         
-         guard let localDate = Calendar.current.date(byAdding: .second, value: Int(timeZoneOffset), to: nowUTC) else {
-         return Date()
-         }
-         
-         return localDate*/
         return Date().date(for: timezone)
     }
     
@@ -66,7 +86,7 @@ extension Date {
     
     var day: Day {
         return
-            try! Day(day: Calendar.current.component(.day, from: self), month: Calendar.current.component(.month, from: self))
+        try! Day(day: Calendar.current.component(.day, from: self), month: Calendar.current.component(.month, from: self))
     }
     
     var time: Time {

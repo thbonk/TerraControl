@@ -112,7 +112,7 @@ public class TerraController: DeviceDelegate {
         
         programScheduler =
             Scheduler.schedule(
-                at: Date.startOfDay,
+                at: Date.tomorrow.startOfDay,
                 repeating: .seconds(24 * 60 * 60),
                 block: schedulePrograms)
         
