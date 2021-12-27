@@ -156,6 +156,8 @@ public class TerraController: DeviceDelegate {
     
     switchEvents.removeAll()
     
+    var schedules = ""
+    
     do {
       let now = Date()
       let noon = try Solar.noon(for: now, at: location, in: configuration.timezone!)
@@ -185,14 +187,19 @@ public class TerraController: DeviceDelegate {
               let onTime = noon - halfIntervall
               let offTime = noon + halfIntervall
               
+              
               switchEvents.append(Scheduler.schedule(at: onTime) {
                 self.setState(switches: rule.switches, state: true)
               })
               switchEvents.append(Scheduler.schedule(at: offTime) {
                 self.setState(switches: rule.switches, state: false)
               })
+              
+              schedules = schedules + "\(rule.switches) - On: \(onTime), Off = \(offTime)\n"
             }
         }
+      
+      PushoverClient.shared.information(message: "Scheduled switches:\n\(schedules)")
     } catch {
       logger.error("Error while scheduling programs: \(error)")
     }
