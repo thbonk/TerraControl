@@ -176,8 +176,7 @@ public class TerraController: DeviceDelegate {
                 return
               }
               
-              let halfIntervall =
-              ((rule.hoursOn + rule.hoursOnIncrementPerDay * Double(now.day - terrarium.currentProgram()!.start)) / 2) * 3600
+              let halfIntervall = ((rule.hoursOn + rule.hoursOnIncrementPerDay * Double(now.day - terrarium.currentProgram()!.start)) / 2) * 3600
               
               
               guard halfIntervall > 0 else {
@@ -195,7 +194,7 @@ public class TerraController: DeviceDelegate {
                 self.setState(switches: rule.switches, state: false)
               })
               
-              schedules = schedules + "\(rule.switches) - On: \(onTime), Off = \(offTime)\n"
+              schedules = schedules + "\(rule.switches) - On: \(onTime.date(for: configuration.timezone!)), Off = \(offTime.date(for: configuration.timezone!))\n"
             }
         }
       

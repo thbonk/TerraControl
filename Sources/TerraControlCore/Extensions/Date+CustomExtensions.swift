@@ -85,8 +85,7 @@ extension Date {
     }
     
     var day: Day {
-        return
-        try! Day(day: Calendar.current.component(.day, from: self), month: Calendar.current.component(.month, from: self))
+        return try! Day(day: Calendar.current.component(.day, from: self), month: Calendar.current.component(.month, from: self))
     }
     
     var time: Time {
