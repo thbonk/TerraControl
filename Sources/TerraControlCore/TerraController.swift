@@ -22,6 +22,16 @@ import Foundation
 import HAP
 import Logging
 
+fileprivate extension Date {
+  
+  var scheduleTime: Date {
+    var this = self
+    
+    this.time = Time(hour: 3, minute: 0, second: 0)
+    return this
+  }
+}
+
 public class TerraController: DeviceDelegate {
   
   // MARK: - Private Properties
@@ -112,11 +122,11 @@ public class TerraController: DeviceDelegate {
     
     programScheduler =
       Scheduler.schedule(
-        at: Date.tomorrow.startOfDay,
+        at: Date.tomorrow.scheduleTime,
         repeating: .seconds(24 * 60 * 60),
         block: schedulePrograms)
     
-    if Date.startOfDay < Date() {
+    if Date().scheduleTime < Date() {
         schedulePrograms()
     }
     
