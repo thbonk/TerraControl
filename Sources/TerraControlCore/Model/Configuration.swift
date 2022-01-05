@@ -389,7 +389,7 @@ public struct Day: Hashable, Codable, Comparable {
   }
 
   public static func > (lhs: Day, rhs: Day) -> Bool {
-    return (lhs != rhs) && !(lhs < rhs)
+    return !(lhs < rhs)
   }
 
   public static func >= (lhs: Day, rhs: Day) -> Bool {

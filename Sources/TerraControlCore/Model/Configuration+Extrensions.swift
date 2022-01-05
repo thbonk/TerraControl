@@ -45,7 +45,7 @@ extension Terrarium {
     let sortedPrograms =
       programs
         .sorted { p1, p2 in
-          p1.start > p2.start
+          p1.start < p2.start
         }
 
     sortedPrograms
@@ -60,7 +60,7 @@ extension Terrarium {
       }
 
     guard currentProgram != nil else {
-      return programs.last
+      return sortedPrograms.last
     }
 
     return currentProgram
